@@ -6,6 +6,7 @@ import android.graphics.PointF
 import com.google.mediapipe.framework.image.BitmapImageBuilder
 import com.google.mediapipe.framework.image.MPImage
 import com.google.mediapipe.tasks.core.BaseOptions
+import com.google.mediapipe.tasks.core.Delegate
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarker
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarkerResult
@@ -41,7 +42,7 @@ class HandGestureDetector(
             .setBaseOptions(
                 BaseOptions.builder()
                     .setModelAssetPath("hand_landmarker.task")
-                    .setDelegate(BaseOptions.Delegate.GPU) // latência mínima
+                    .setDelegate(Delegate.GPU) // latência mínima
                     .build()
             )
             .setRunningMode(RunningMode.LIVE_STREAM)
@@ -49,6 +50,7 @@ class HandGestureDetector(
             .setMinHandDetectionConfidence(0.6f)
             .setMinTrackingConfidence(0.5f)
             .setResultListener(this::onResult)
+            .setErrorListener(this::onError)
             .build()
     )
 
@@ -89,6 +91,11 @@ class HandGestureDetector(
 
         val confidence = (1f - (normalizedDistance / PINCH_EXIT_THRESHOLD)).coerceIn(0f, 1f)
         onPinchUpdate(PinchState(currentlyPinching, screenPos, confidence))
+    }
+
+    private fun onError(error: RuntimeException) {
+        // TODO: plugar num sistema de log real; por enquanto só evita crash silencioso.
+        error.printStackTrace()
     }
 
     private fun distance(x1: Float, y1: Float, x2: Float, y2: Float): Float {
